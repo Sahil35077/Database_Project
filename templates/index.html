@@ -150,7 +150,7 @@
                   {{ row.sample_type }}
                 </div>
                 <div class="sample-type-track">
-                  <div class="sample-type-fill" style="width: {{ pct|round(0) }}%;"></div>
+                  <div class="sample-type-fill" data-fill-width="{{ pct|round(0) }}"></div>
                 </div>
                 <div class="sample-type-count">
                   {{ row.c }}
@@ -180,7 +180,7 @@
                   {{ row.status }}
                 </div>
                 <div class="exp-status-track">
-                  <div class="exp-status-fill" style="width: {{ pct|round(0) }}%;"></div>
+                  <div class="exp-status-fill" data-fill-width="{{ pct|round(0) }}"></div>
                 </div>
                 <div class="exp-status-count">
                   {{ row.c }}
@@ -201,27 +201,44 @@
     <div class="card border-0 shadow-sm h-100">
       <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
         <span>Recent lab activity</span>
-        <span class="text-muted small">Latest measurement results</span>
+        <span class="text-muted small">Latest samples and measurement results</span>
       </div>
       <div class="card-body">
-        {% if recent_results %}
+        {% if recent_activity %}
           <ul class="activity-timeline">
-            {% for r in recent_results %}
-              <li class="activity-item">
+            {% for item in recent_activity %}
+              <li class="activity-item activity-{{ item.activity_type }}">
                 <div class="activity-marker"></div>
                 <div class="activity-content">
+                  <div class="activity-badge-row">
+                    {% if item.activity_type == 'sample' %}
+                      <span class="activity-badge activity-badge-sample">
+                        <i class="bi bi-plus-circle-fill"></i>
+                        Sample Added
+                      </span>
+                    {% else %}
+                      <span class="activity-badge activity-badge-result">
+                        <i class="bi bi-clipboard-data-fill"></i>
+                        Result Recorded
+                      </span>
+                    {% endif %}
+                  </div>
                   <div class="activity-title">
-                    {{ r.measurement_type }} on {{ r.sample_code }}
+                    {% if item.activity_type == 'sample' %}
+                      {{ item.title }}: {{ item.sample_code }}
+                    {% else %}
+                      {{ item.title }} on {{ item.sample_code }}
+                    {% endif %}
                   </div>
                   <div class="activity-meta text-muted">
-                    {{ r.value }} {{ r.unit }} &middot; {{ r.experiment_title }} &middot; {{ r.measured_at }}
+                    {{ item.detail }} &middot; {{ item.context_text }} &middot; {{ item.activity_time }}
                   </div>
                 </div>
               </li>
             {% endfor %}
           </ul>
         {% else %}
-          <p class="text-muted small mb-0">No recent measurements yet. Record a new result to see it appear here.</p>
+          <p class="text-muted small mb-0">No recent activity yet. Add a sample or record a result to see it appear here.</p>
         {% endif %}
       </div>
     </div>

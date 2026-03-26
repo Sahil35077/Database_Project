@@ -26,6 +26,15 @@ document.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(step);
   });
 
+  // Apply dashboard progress widths after render
+  const fills = document.querySelectorAll("[data-fill-width]");
+  fills.forEach((el) => {
+    const width = el.getAttribute("data-fill-width");
+    if (width !== null) {
+      el.style.width = `${width}%`;
+    }
+  });
+
   // Enable Bootstrap tooltips if available
   if (window.bootstrap) {
     const tooltipTriggerList = [].slice.call(

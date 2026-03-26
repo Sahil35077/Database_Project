@@ -283,10 +283,46 @@ h3,
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
 }
 
+.activity-item.activity-sample .activity-marker {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.22);
+}
+
+.activity-item.activity-result .activity-marker {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.22);
+}
+
 .activity-content {
   border-radius: 0.75rem;
   padding: 0.4rem 0.55rem;
   transition: background-color 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.activity-badge-row {
+  margin-bottom: 0.3rem;
+}
+
+.activity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.14rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.activity-badge-sample {
+  background: #ecfdf5;
+  color: #15803d;
+}
+
+.activity-badge-result {
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
 .activity-title {

@@ -45,6 +45,7 @@ def init_db():
             sample_type         TEXT NOT NULL,
             description         TEXT,
             collected_date      TEXT NOT NULL,
+            created_at          TEXT,
             volume_ml           REAL,
             status              TEXT NOT NULL,
             researcher_id       INTEGER NOT NULL,
@@ -87,6 +88,8 @@ def init_db():
         """
     )
 
+    _ensure_sample_created_at(conn)
+
     # Seed data only if empty
     cur.execute("SELECT COUNT(*) FROM researcher;")
     if cur.fetchone()[0] == 0:
@@ -94,6 +97,24 @@ def init_db():
 
     conn.commit()
     conn.close()
+
+
+def _ensure_sample_created_at(conn: sqlite3.Connection) -> None:
+    cur = conn.cursor()
+    cur.execute("PRAGMA table_info(sample);")
+    columns = {row[1] for row in cur.fetchall()}
+
+    if "created_at" not in columns:
+        cur.execute("ALTER TABLE sample ADD COLUMN created_at TEXT;")
+
+    # Backfill existing rows so the dashboard can sort sample activity.
+    cur.execute(
+        """
+        UPDATE sample
+        SET created_at = COALESCE(created_at, collected_date || ' 09:00:00')
+        WHERE created_at IS NULL OR created_at = '';
+        """
+    )
 
 
 def seed_data(conn: sqlite3.Connection) -> None:
@@ -138,29 +159,29 @@ def seed_data(conn: sqlite3.Connection) -> None:
 
     # Samples
     samples = [
-        ("S-2025-001", "Soil", "Topsoil near river bank", "2025-03-01", 250.0, "Stored",
+        ("S-2025-001", "Soil", "Topsoil near river bank", "2025-03-01", "2025-03-01 09:00:00", 250.0, "Stored",
          researchers_map["eve.martinez@lab.edu"], locations_map["Freezer A - Rack 1"]),
-        ("S-2025-002", "Soil", "Subsurface soil 30cm depth", "2025-03-01", 200.0, "Stored",
+        ("S-2025-002", "Soil", "Subsurface soil 30cm depth", "2025-03-01", "2025-03-01 09:15:00", 200.0, "Stored",
          researchers_map["eve.martinez@lab.edu"], locations_map["Freezer A - Rack 1"]),
-        ("W-2025-010", "Water", "River water upstream of discharge", "2025-03-05", 500.0, "Stored",
+        ("W-2025-010", "Water", "River water upstream of discharge", "2025-03-05", "2025-03-05 10:00:00", 500.0, "Stored",
          researchers_map["carol.lee@lab.edu"], locations_map["Freezer A - Rack 2"]),
-        ("W-2025-011", "Water", "River water downstream of discharge", "2025-03-05", 500.0, "Stored",
+        ("W-2025-011", "Water", "River water downstream of discharge", "2025-03-05", "2025-03-05 10:15:00", 500.0, "Stored",
          researchers_map["carol.lee@lab.edu"], locations_map["Freezer A - Rack 2"]),
-        ("B-2025-021", "Biological", "Algal culture from reservoir", "2025-03-10", 100.0, "In use",
+        ("B-2025-021", "Biological", "Algal culture from reservoir", "2025-03-10", "2025-03-10 11:00:00", 100.0, "In use",
          researchers_map["tom.brown@lab.edu"], locations_map["Cold Room Shelf 3"]),
-        ("S-2025-003", "Soil", "Agricultural field surface", "2025-03-12", 300.0, "Stored",
+        ("S-2025-003", "Soil", "Agricultural field surface", "2025-03-12", "2025-03-12 09:30:00", 300.0, "Stored",
          researchers_map["eve.martinez@lab.edu"], locations_map["Field Cooler"]),
-        ("W-2025-012", "Water", "Groundwater from monitoring well", "2025-03-15", 250.0, "Stored",
+        ("W-2025-012", "Water", "Groundwater from monitoring well", "2025-03-15", "2025-03-15 08:45:00", 250.0, "Stored",
          researchers_map["carol.lee@lab.edu"], locations_map["Cold Room Shelf 3"]),
-        ("B-2025-022", "Biological", "E. coli test culture", "2025-03-16", 50.0, "In use",
+        ("B-2025-022", "Biological", "E. coli test culture", "2025-03-16", "2025-03-16 09:00:00", 50.0, "In use",
          researchers_map["bob.johnson@lab.edu"], locations_map["Incubator 37C"]),
     ]
     cur.executemany(
         """
         INSERT INTO sample
-        (sample_code, sample_type, description, collected_date, volume_ml, status,
+        (sample_code, sample_type, description, collected_date, created_at, volume_ml, status,
          researcher_id, storage_location_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
         """,
         samples,
     )
@@ -321,6 +342,7 @@ def generate_more_data(additional_samples: int = 30, additional_experiments: int
                 sample_type,
                 description,
                 collected.isoformat(),
+                f"{collected.isoformat()} 09:00:00",
                 volume,
                 status,
                 researcher_id,
@@ -331,9 +353,9 @@ def generate_more_data(additional_samples: int = 30, additional_experiments: int
     cur.executemany(
         """
         INSERT OR IGNORE INTO sample
-        (sample_code, sample_type, description, collected_date, volume_ml, status,
+        (sample_code, sample_type, description, collected_date, created_at, volume_ml, status,
          researcher_id, storage_location_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
         """,
         new_samples,
     )

@@ -58,21 +58,37 @@ def index():
     # Recent activity for dashboard timeline
     cur.execute(
         """
-        SELECT
-            res.measured_at,
-            res.measurement_type,
-            res.value,
-            res.unit,
-            s.sample_code,
-            e.title AS experiment_title
-        FROM result res
-        JOIN sample s ON res.sample_id = s.id
-        JOIN experiment e ON res.experiment_id = e.id
-        ORDER BY res.measured_at DESC
+        SELECT *
+        FROM (
+            SELECT
+                'result' AS activity_type,
+                res.measured_at AS activity_time,
+                s.sample_code AS sample_code,
+                res.measurement_type AS title,
+                (CAST(res.value AS TEXT) || ' ' || res.unit) AS detail,
+                e.title AS context_text
+            FROM result res
+            JOIN sample s ON res.sample_id = s.id
+            JOIN experiment e ON res.experiment_id = e.id
+
+            UNION ALL
+
+            SELECT
+                'sample' AS activity_type,
+                s.created_at AS activity_time,
+                s.sample_code AS sample_code,
+                'Sample added' AS title,
+                s.sample_type AS detail,
+                sl.name AS context_text
+            FROM sample s
+            JOIN storage_location sl ON s.storage_location_id = sl.id
+            WHERE s.created_at IS NOT NULL
+        )
+        ORDER BY activity_time DESC
         LIMIT 6;
         """
     )
-    recent_results = cur.fetchall()
+    recent_activity = cur.fetchall()
 
     conn.close()
     return render_template(
@@ -84,7 +100,7 @@ def index():
         sample_type_stats=sample_type_stats,
         max_sample_type_count=max_sample_type_count,
         experiment_status_stats=experiment_status_stats,
-        recent_results=recent_results,
+        recent_activity=recent_activity,
     )
 
 
@@ -321,6 +337,7 @@ def create_sample():
         sample_type = request.form["sample_type"].strip()
         description = request.form.get("description", "").strip() or None
         collected_date = request.form["collected_date"].strip()
+        created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         volume_ml = request.form.get("volume_ml", "").strip() or None
         status = request.form["status"].strip()
         researcher_id = request.form.get("researcher_id")
@@ -342,15 +359,16 @@ def create_sample():
                 cur.execute(
                     """
                     INSERT INTO sample
-                    (sample_code, sample_type, description, collected_date,
+                    (sample_code, sample_type, description, collected_date, created_at,
                      volume_ml, status, researcher_id, storage_location_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
                     (
                         sample_code,
                         sample_type,
                         description,
                         collected_date,
+                        created_at,
                         volume_ml,
                         status,
                         int(researcher_id),
