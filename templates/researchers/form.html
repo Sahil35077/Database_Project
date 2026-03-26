@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="h4 mb-3">
+  {% if researcher %}Edit Researcher{% else %}Add Researcher{% endif %}
+</h2>
+
+<form method="post" class="card border-0 shadow-sm">
+  <div class="card-body">
+    <div class="mb-3">
+      <label class="form-label">Name *</label>
+      <input type="text" name="name" class="form-control" value="{{ researcher.name if researcher else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Email *</label>
+      <input type="email" name="email" class="form-control" value="{{ researcher.email if researcher else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Role *</label>
+      <input type="text" name="role" class="form-control" value="{{ researcher.role if researcher else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Department *</label>
+      <input type="text" name="department" class="form-control" value="{{ researcher.department if researcher else '' }}" required>
+    </div>
+  </div>
+  <div class="card-footer bg-white d-flex justify-content-between">
+    <a href="{{ url_for('list_researchers') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+  </div>
+</form>
+{% endblock %}
+

@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row mb-4">
+  <div class="col-lg-7 mb-3">
+    <div class="card card-hero shadow-soft">
+      <div class="card-body p-4">
+        <div class="hero-pill mb-2">
+          <i class="bi bi-database-fill-gear me-1"></i>
+          Academic LIMS · Flask + SQLite
+        </div>
+        <h1 class="h4 fw-bold mb-2 mt-1">Laboratory Sample Tracking System</h1>
+        <p class="mb-3">
+          A focused LIMS-style application for managing samples, experiments, storage locations,
+          and measurement results with full traceability.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          <a href="{{ url_for('create_sample') }}" class="btn btn-light btn-sm">
+            Add sample
+          </a>
+          <a href="{{ url_for('search_samples') }}" class="btn btn-outline-light btn-sm">
+            Search samples
+          </a>
+          <a href="{{ url_for('sample_traceability') }}" class="btn btn-outline-light btn-sm">
+            Sample traceability
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5 mb-3">
+    <div class="card border-0 shadow-soft">
+      <div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-3">At a glance</h2>
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="metric-card p-3" data-bs-toggle="tooltip" title="Total number of researchers in the system">
+              <div class="text-muted small text-uppercase mb-1">Researchers</div>
+              <div class="metric-value fw-bold" data-count-target="{{ researcher_count }}">0</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="metric-card p-3" data-bs-toggle="tooltip" title="Total samples currently tracked">
+              <div class="text-muted small text-uppercase mb-1">Samples</div>
+              <div class="metric-value fw-bold" data-count-target="{{ sample_count }}">0</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="metric-card p-3" data-bs-toggle="tooltip" title="Number of experiments defined in the database">
+              <div class="text-muted small text-uppercase mb-1">Experiments</div>
+              <div class="metric-value fw-bold" data-count-target="{{ experiment_count }}">0</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="metric-card p-3" data-bs-toggle="tooltip" title="Total individual measurement results stored">
+              <div class="text-muted small text-uppercase mb-1">Results</div>
+              <div class="metric-value fw-bold" data-count-target="{{ result_count }}">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <a href="{{ url_for('list_samples') }}" class="text-decoration-none text-reset">
+      <div class="feature-tile shadow-sm">
+        <div class="feature-icon">
+          <i class="bi bi-droplet-half"></i>
+        </div>
+        <div class="feature-body">
+          <h6>Samples</h6>
+          <p class="mb-0">Browse all collected samples with storage and collector information.</p>
+          <div class="feature-stat">
+            <i class="bi bi-circle-fill text-primary me-1" style="font-size: 0.45rem;"></i>
+            {{ sample_count }} total samples
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="{{ url_for('list_experiments') }}" class="text-decoration-none text-reset">
+      <div class="feature-tile shadow-sm">
+        <div class="feature-icon">
+          <i class="bi bi-diagram-3"></i>
+        </div>
+        <div class="feature-body">
+          <h6>Experiments</h6>
+          <p class="mb-0">See active, planned, and completed experiments and their linked samples.</p>
+          <div class="feature-stat">
+            <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.45rem;"></i>
+            {{ experiment_count }} experiments
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="{{ url_for('list_locations') }}" class="text-decoration-none text-reset">
+      <div class="feature-tile shadow-sm">
+        <div class="feature-icon">
+          <i class="bi bi-boxes"></i>
+        </div>
+        <div class="feature-body">
+          <h6>Storage</h6>
+          <p class="mb-0">Inspect freezers, cold rooms, incubators, and cabinets that store samples.</p>
+          <div class="feature-stat">
+            <i class="bi bi-circle-fill text-warning me-1" style="font-size: 0.45rem;"></i>
+            View storage map
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3">
+    <a href="{{ url_for('storage_summary') }}" class="text-decoration-none text-reset">
+      <div class="feature-tile shadow-sm">
+        <div class="feature-icon">
+          <i class="bi bi-graph-up"></i>
+        </div>
+        <div class="feature-body">
+          <h6>Analytics</h6>
+          <p class="mb-0">Open summary views for storage distribution and traceability analysis.</p>
+          <div class="feature-stat">
+            <i class="bi bi-circle-fill text-danger me-1" style="font-size: 0.45rem;"></i>
+            Explore query tools
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+        <span>Sample type distribution</span>
+        <span class="text-muted small">Counts by sample type</span>
+      </div>
+      <div class="card-body">
+        {% if sample_type_stats %}
+          <div class="sample-type-list">
+            {% for row in sample_type_stats %}
+              {% set pct = (row.c / max_sample_type_count * 100) if max_sample_type_count else 0 %}
+              <div class="sample-type-row">
+                <div class="sample-type-label-chip">
+                  {{ row.sample_type }}
+                </div>
+                <div class="sample-type-track">
+                  <div class="sample-type-fill" style="width: {{ pct|round(0) }}%;"></div>
+                </div>
+                <div class="sample-type-count">
+                  {{ row.c }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">No samples have been recorded yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold">
+        Experiment status overview
+      </div>
+      <div class="card-body">
+        {% if experiment_status_stats %}
+          {% set total_exps = experiment_status_stats | map(attribute="c") | sum %}
+          <div class="exp-status-list">
+            {% for row in experiment_status_stats %}
+              {% set pct = (row.c / total_exps * 100) if total_exps else 0 %}
+              <div class="exp-status-row">
+                <div class="exp-status-label-chip">
+                  {{ row.status }}
+                </div>
+                <div class="exp-status-track">
+                  <div class="exp-status-fill" style="width: {{ pct|round(0) }}%;"></div>
+                </div>
+                <div class="exp-status-count">
+                  {{ row.c }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">No experiments have been recorded yet.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+        <span>Recent lab activity</span>
+        <span class="text-muted small">Latest measurement results</span>
+      </div>
+      <div class="card-body">
+        {% if recent_results %}
+          <ul class="activity-timeline">
+            {% for r in recent_results %}
+              <li class="activity-item">
+                <div class="activity-marker"></div>
+                <div class="activity-content">
+                  <div class="activity-title">
+                    {{ r.measurement_type }} on {{ r.sample_code }}
+                  </div>
+                  <div class="activity-meta text-muted">
+                    {{ r.value }} {{ r.unit }} &middot; {{ r.experiment_title }} &middot; {{ r.measured_at }}
+                  </div>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted small mb-0">No recent measurements yet. Record a new result to see it appear here.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6 mb-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold d-flex align-items-center">
+        <i class="bi bi-lightning-charge-fill text-warning me-2"></i>
+        <span>Quick actions</span>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="qa-group-title">Record data</div>
+            <a href="{{ url_for('create_sample') }}" class="qa-item">
+              <div class="qa-item-icon bg-primary bg-opacity-10 text-primary">
+                <i class="bi bi-droplet-half"></i>
+              </div>
+              <div class="qa-item-body">
+                <div class="qa-item-label">Add new sample</div>
+                <div class="qa-item-caption">Capture a new soil, water, or biological sample.</div>
+              </div>
+              <div class="qa-item-arrow">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </a>
+            <a href="{{ url_for('create_experiment') }}" class="qa-item">
+              <div class="qa-item-icon bg-success bg-opacity-10 text-success">
+                <i class="bi bi-diagram-3"></i>
+              </div>
+              <div class="qa-item-body">
+                <div class="qa-item-label">Create new experiment</div>
+                <div class="qa-item-caption">Define objectives, dates, and linked samples.</div>
+              </div>
+              <div class="qa-item-arrow">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </a>
+            <a href="{{ url_for('create_result') }}" class="qa-item">
+              <div class="qa-item-icon bg-info bg-opacity-10 text-info">
+                <i class="bi bi-clipboard-plus"></i>
+              </div>
+              <div class="qa-item-body">
+                <div class="qa-item-label">Record new result</div>
+                <div class="qa-item-caption">Log measurements such as pH, nitrate, or OD600.</div>
+              </div>
+              <div class="qa-item-arrow">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </a>
+          </div>
+          <div class="col-sm-6 mt-3 mt-sm-0">
+            <div class="qa-group-title">Explore &amp; analyse</div>
+            <a href="{{ url_for('search_samples') }}" class="qa-item">
+              <div class="qa-item-icon bg-secondary bg-opacity-10 text-secondary">
+                <i class="bi bi-search"></i>
+              </div>
+              <div class="qa-item-body">
+                <div class="qa-item-label">Search samples</div>
+                <div class="qa-item-caption">Filter by type, date range, and storage location.</div>
+              </div>
+              <div class="qa-item-arrow">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </a>
+            <a href="{{ url_for('sample_traceability') }}" class="qa-item">
+              <div class="qa-item-icon bg-danger bg-opacity-10 text-danger">
+                <i class="bi bi-flowchart"></i>
+              </div>
+              <div class="qa-item-body">
+                <div class="qa-item-label">Sample traceability</div>
+                <div class="qa-item-caption">Follow a sample through experiments and results.</div>
+              </div>
+              <div class="qa-item-arrow">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </a>
+            <a href="{{ url_for('storage_summary') }}" class="qa-item">
+              <div class="qa-item-icon bg-success bg-opacity-10 text-success">
+                <i class="bi bi-bar-chart-line"></i>
+              </div>
+              <div class="qa-item-body">
+                <div class="qa-item-label">Storage summary</div>
+                <div class="qa-item-caption">See how samples are distributed across locations.</div>
+              </div>
+              <div class="qa-item-arrow">
+                <i class="bi bi-chevron-right"></i>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 mb-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold d-flex align-items-center">
+        <i class="bi bi-info-circle-fill text-primary me-2"></i>
+        <span>About this system</span>
+      </div>
+      <div class="card-body">
+        <p class="mb-2">
+          This educational Laboratory Sample Tracking System is a compact LIMS-style app designed for small
+          academic labs and database coursework.
+        </p>
+        <ul class="about-list">
+          <li class="about-item">
+            <span class="about-bullet">
+              <i class="bi bi-record-circle-fill"></i>
+            </span>
+            <span>
+              <strong>Entities</strong> &middot; researchers, samples, experiments, storage locations, and results.
+            </span>
+          </li>
+          <li class="about-item">
+            <span class="about-bullet">
+              <i class="bi bi-diagram-3"></i>
+            </span>
+            <span>
+              <strong>Relationships</strong> &middot; many-to-many between samples and experiments, plus foreign-key
+              links from results for full traceability.
+            </span>
+          </li>
+          <li class="about-item">
+            <span class="about-bullet">
+              <i class="bi bi-bar-chart"></i>
+            </span>
+            <span>
+              <strong>Queries</strong> &middot; multi-table joins (traceability) and aggregate views (storage summary).
+            </span>
+          </li>
+        </ul>
+        <p class="mb-0 text-muted small">
+          Use the top navigation to manage entities, or the <strong>Queries</strong> menu to demonstrate
+          joins, filters, and aggregates in a realistic lab scenario.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

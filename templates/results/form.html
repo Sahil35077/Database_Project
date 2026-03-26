@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="h4 mb-3">
+  {% if result %}Edit Result{% else %}Add Result{% endif %}
+</h2>
+
+<form method="post" class="card border-0 shadow-sm">
+  <div class="card-body">
+    {% if not result %}
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Experiment *</label>
+          <select name="experiment_id" class="form-select" required>
+            <option value="">-- select experiment --</option>
+            {% for e in experiments %}
+              <option value="{{ e.id }}">{{ e.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Sample *</label>
+          <select name="sample_id" class="form-select" required>
+            <option value="">-- select sample --</option>
+            {% for s in samples %}
+              <option value="{{ s.id }}">{{ s.sample_code }} ({{ s.sample_type }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    {% else %}
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Experiment</label>
+          <input type="text" class="form-control" value="{{ result.experiment_id }}" disabled>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Sample</label>
+          <input type="text" class="form-control" value="{{ result.sample_id }}" disabled>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Measurement Type *</label>
+        <input type="text" name="measurement_type" class="form-control"
+               value="{{ result.measurement_type if result else '' }}" required>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Value *</label>
+        <input type="number" step="0.0001" name="value" class="form-control"
+               value="{{ result.value if result else '' }}" required>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Unit *</label>
+        <input type="text" name="unit" class="form-control"
+               value="{{ result.unit if result else '' }}" required>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Measured At (YYYY-MM-DD HH:MM:SS)</label>
+      <input type="text" name="measured_at" class="form-control"
+             value="{{ result.measured_at if result else '' }}">
+      <div class="form-text">
+        Leave blank to use the current timestamp when creating a new result.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Notes</label>
+      <textarea name="notes" class="form-control" rows="3">{{ result.notes if result else '' }}</textarea>
+    </div>
+  </div>
+  <div class="card-footer bg-white d-flex justify-content-between">
+    <a href="{{ url_for('list_results') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+  </div>
+</form>
+{% endblock %}
+

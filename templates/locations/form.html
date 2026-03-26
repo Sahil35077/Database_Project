@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="h4 mb-3">
+  {% if location %}Edit Storage Location{% else %}Add Storage Location{% endif %}
+</h2>
+
+<form method="post" class="card border-0 shadow-sm">
+  <div class="card-body">
+    <div class="mb-3">
+      <label class="form-label">Name *</label>
+      <input type="text" name="name" class="form-control" value="{{ location.name if location else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Location Type *</label>
+      <input type="text" name="location_type" class="form-control" value="{{ location.location_type if location else '' }}" required>
+    </div>
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Room</label>
+        <input type="text" name="room" class="form-control" value="{{ location.room if location else '' }}">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Freezer</label>
+        <input type="text" name="freezer" class="form-control" value="{{ location.freezer if location else '' }}">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Shelf</label>
+        <input type="text" name="shelf" class="form-control" value="{{ location.shelf if location else '' }}">
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+      <textarea name="description" class="form-control" rows="3">{{ location.description if location else '' }}</textarea>
+    </div>
+  </div>
+  <div class="card-footer bg-white d-flex justify-content-between">
+    <a href="{{ url_for('list_locations') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+  </div>
+</form>
+{% endblock %}
+

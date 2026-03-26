@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="h4 mb-3">
+  {% if experiment %}Edit Experiment{% else %}Add Experiment{% endif %}
+</h2>
+
+<form method="post" class="card border-0 shadow-sm">
+  <div class="card-body">
+    <div class="mb-3">
+      <label class="form-label">Title *</label>
+      <input type="text" name="title" class="form-control"
+             value="{{ experiment.title if experiment else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+      <textarea name="description" class="form-control" rows="3">{{ experiment.description if experiment else '' }}</textarea>
+    </div>
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Start Date (YYYY-MM-DD) *</label>
+        <input type="date" name="start_date" class="form-control"
+               value="{{ experiment.start_date if experiment else '' }}" required>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">End Date</label>
+        <input type="date" name="end_date" class="form-control"
+               value="{{ experiment.end_date if experiment and experiment.end_date else '' }}">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Status *</label>
+        <select name="status" class="form-select" required>
+          {% set current_status = experiment.status if experiment else 'Ongoing' %}
+          {% for st in ['Planned', 'Ongoing', 'Completed', 'Cancelled'] %}
+            <option value="{{ st }}" {% if current_status == st %}selected{% endif %}>{{ st }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Responsible Researcher *</label>
+      <select name="researcher_id" class="form-select" required>
+        <option value="">-- select researcher --</option>
+        {% for r in researchers %}
+          <option value="{{ r.id }}"
+                  {% if experiment and experiment.researcher_id == r.id %}selected{% endif %}>
+            {{ r.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Samples Used</label>
+      <select name="sample_ids" class="form-select" multiple size="6">
+        {% for s in samples %}
+          <option value="{{ s.id }}"
+                  {% if s.id in selected_sample_ids %}selected{% endif %}>
+            {{ s.sample_code }} - {{ s.sample_type }}
+          </option>
+        {% endfor %}
+      </select>
+      <div class="form-text">
+        Hold Ctrl (Windows) or Command (Mac) to select multiple samples.
+      </div>
+    </div>
+  </div>
+  <div class="card-footer bg-white d-flex justify-content-between">
+    <a href="{{ url_for('list_experiments') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+  </div>
+</form>
+{% endblock %}
+

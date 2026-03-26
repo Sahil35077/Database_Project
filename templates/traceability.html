@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="h4 mb-3">Sample Traceability (Multi-table Join)</h2>
+
+<form method="post" class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <div class="mb-3">
+      <label class="form-label">Sample</label>
+      <select name="sample_id" class="form-select">
+        <option value="">-- select sample --</option>
+        {% for s in samples %}
+          <option value="{{ s.id }}"
+                  {% if selected_sample_id|int == s.id %}selected{% endif %}>
+            {{ s.sample_code }} ({{ s.sample_type }})
+          </option>
+        {% endfor %}
+      </select>
+      <div class="form-text">
+        This query joins SAMPLE, RESULT, EXPERIMENT, and RESEARCHER to show full traceability.
+      </div>
+    </div>
+  </div>
+  <div class="card-footer bg-white d-flex justify-content-between">
+    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
+    <button type="submit" class="btn btn-primary btn-sm">View Traceability</button>
+  </div>
+</form>
+
+<table class="table table-striped table-hover align-middle table-modern">
+  <thead class="table-light">
+    <tr>
+      <th>Sample Code</th>
+      <th>Sample Type</th>
+      <th>Experiment</th>
+      <th>Researcher</th>
+      <th>Measurement</th>
+      <th>Value</th>
+      <th>Measured At</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in trace_rows %}
+      <tr>
+        <td>{{ row.sample_code }}</td>
+        <td>{{ row.sample_type }}</td>
+        <td>{{ row.experiment_title }}</td>
+        <td>{{ row.researcher_name }}</td>
+        <td>{{ row.measurement_type }}</td>
+        <td>{{ row.value }} {{ row.unit }}</td>
+        <td>{{ row.measured_at }}</td>
+        <td>{{ row.notes or '—' }}</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="8" class="text-center text-muted py-3">
+          {% if request.method == 'POST' and selected_sample_id %}
+            No results found for this sample.
+          {% else %}
+            Select a sample and submit to view its measurement traceability across experiments and researchers.
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+

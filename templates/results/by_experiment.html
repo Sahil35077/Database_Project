@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="h4 mb-3">Results by Experiment</h2>
+
+<form method="post" class="card border-0 shadow-sm mb-4">
+  <div class="card-body">
+    <div class="mb-3">
+      <label class="form-label">Experiment</label>
+      <select name="experiment_id" class="form-select">
+        <option value="">-- select experiment --</option>
+        {% for e in experiments %}
+          <option value="{{ e.id }}"
+                  {% if selected_experiment_id|int == e.id %}selected{% endif %}>
+            {{ e.title }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="card-footer bg-white d-flex justify-content-between">
+    <a href="{{ url_for('list_results') }}" class="btn btn-outline-secondary btn-sm">Back to Results</a>
+    <button type="submit" class="btn btn-primary btn-sm">View Results</button>
+  </div>
+</form>
+
+<table class="table table-striped table-hover align-middle table-modern">
+  <thead class="table-light">
+    <tr>
+      <th>Measurement</th>
+      <th>Sample</th>
+      <th>Value</th>
+      <th>Measured At</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in results %}
+      <tr>
+        <td>{{ r.measurement_type }}</td>
+        <td>{{ r.sample_code }}</td>
+        <td>{{ r.value }} {{ r.unit }}</td>
+        <td>{{ r.measured_at }}</td>
+        <td>{{ r.notes or '—' }}</td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="5" class="text-center text-muted py-3">
+          {% if request.method == 'POST' and selected_experiment_id %}
+            No results found for this experiment.
+          {% else %}
+            Select an experiment and submit to view results.
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
